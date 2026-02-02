@@ -52,13 +52,17 @@ function tryImage(url) {
 }
 
 async function startLoop() {
-    let attempts = 0;
     const status = document.getElementById("status");
     const list = document.getElementById("list");
 
+    let totalAttempts = 0;
+    let attemptsSinceLastFound = 0;
+
     while (true) {
-        attempts++;
-        status.textContent = `Searching… tried ${attempts} codes`;
+        totalAttempts++;
+        attemptsSinceLastFound++;
+
+        status.textContent = `Searching… total attempts: ${totalAttempts}`;
 
         const code = randomCode();
         const url = "https://tikolu.net/i/" + code;
@@ -66,9 +70,13 @@ async function startLoop() {
         try {
             await tryImage(url);
 
-            // Create a new entry block
+            // Create entry block
             const entry = document.createElement("div");
             entry.className = "entry";
+
+            // Attempts taken for THIS find
+            const triesLabel = document.createElement("div");
+            triesLabel.textContent = `Found after ${attemptsSinceLastFound} tries`;
 
             // URL text
             const linkText = document.createElement("div");
@@ -84,15 +92,19 @@ async function startLoop() {
                 btn.disabled = true;
             };
 
+            entry.appendChild(triesLabel);
             entry.appendChild(linkText);
             entry.appendChild(btn);
             list.appendChild(entry);
 
+            // Reset counter for next image
+            attemptsSinceLastFound = 0;
+
         } catch {
-            // just skip failed attempts
+            // ignore errors, continue looping
         }
 
-        // tiny delay so the browser doesn't freeze
+        // Prevent browser freeze
         await new Promise(res => setTimeout(res, 10));
     }
 }
