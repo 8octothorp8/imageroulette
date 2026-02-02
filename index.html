@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tikolu Random Image Finder</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        text-align: center;
+    }
+    #img-container {
+        margin-top: 20px;
+    }
+    img {
+        max-width: 90%;
+        max-height: 80vh;
+        border: 2px solid #ccc;
+        border-radius: 6px;
+    }
+</style>
+</head>
+<body>
+
+<h2>Tikolu Random Image Finder</h2>
+
+<div id="status">loading…</div>
+<button id="showBtn" style="display:none;">show?</button>
+
+<div id="img-container"></div>
+
+<script>
+function randomCode() {
+    let letters = "abcdefghijklmnopqrstuvwxyz";
+    let out = "";
+    for (let i = 0; i < 5; i++) out += letters[Math.floor(Math.random() * letters.length)];
+    return out;
+}
+
+async function findImage() {
+    document.getElementById("status").textContent = "loading…";
+    document.getElementById("showBtn").style.display = "none";
+
+    while (true) {
+        let code = randomCode();
+        let url = "https://tikolu.net/i/" + code;
+
+        try {
+            let response = await fetch(url, { method: "HEAD" });
+
+            // 200 = valid image
+            if (response.ok) {
+                document.getElementById("status").textContent = 
+                    "Found: " + url;
+                
+                // prepare button
+                document.getElementById("showBtn").onclick = () => {
+                    let img = document.createElement("img");
+                    img.src = url;
+                    let container = document.getElementById("img-container");
+                    container.innerHTML = "";
+                    container.appendChild(img);
+                };
+
+                document.getElementById("showBtn").style.display = "inline-block";
+                break;
+            }
+        } catch (e) {
+            // network errors just retry
+        }
+    }
+}
+
+findImage();
+</script>
+
+</body>
+</html>
