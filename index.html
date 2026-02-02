@@ -14,6 +14,14 @@
         max-height: 80vh;
         border: 2px solid #ccc;
         border-radius: 6px;
+        margin-top: 10px;
+    }
+    .entry {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        display: block;
     }
 </style>
 </head>
@@ -22,13 +30,11 @@
 <h2>Tikolu Random Image Finder</h2>
 
 <div id="status">loading…</div>
-<div id="details"></div>
-<button id="showBtn" style="display:none;">show?</button>
-<div id="img-container"></div>
+<div id="list"></div>
 
 <script>
 function randomCode() {
-    let letters = "abcdefghijklmnopqrstuvwxyz";
+    const letters = "abcdefghijklmnopqrstuvwxyz";
     let out = "";
     for (let i = 0; i < 5; i++) {
         out += letters[Math.floor(Math.random() * letters.length)];
@@ -45,43 +51,53 @@ function tryImage(url) {
     });
 }
 
-async function findImage() {
+async function startLoop() {
     let attempts = 0;
-
     const status = document.getElementById("status");
-    const details = document.getElementById("details");
-    const showBtn = document.getElementById("showBtn");
-    const container = document.getElementById("img-container");
+    const list = document.getElementById("list");
 
     while (true) {
         attempts++;
         status.textContent = `Searching… tried ${attempts} codes`;
 
-        let code = randomCode();
-        let url = "https://tikolu.net/i/" + code;
+        const code = randomCode();
+        const url = "https://tikolu.net/i/" + code;
 
         try {
             await tryImage(url);
 
-            status.textContent = `Found after ${attempts} tries`;
-            details.textContent = url;
+            // Create a new entry block
+            const entry = document.createElement("div");
+            entry.className = "entry";
 
-            showBtn.onclick = () => {
-                container.innerHTML = "";
+            // URL text
+            const linkText = document.createElement("div");
+            linkText.textContent = url;
+
+            // Show button
+            const btn = document.createElement("button");
+            btn.textContent = "show?";
+            btn.onclick = () => {
                 const img = document.createElement("img");
                 img.src = url;
-                container.appendChild(img);
+                entry.appendChild(img);
+                btn.disabled = true;
             };
 
-            showBtn.style.display = "inline-block";
-            break;
+            entry.appendChild(linkText);
+            entry.appendChild(btn);
+            list.appendChild(entry);
+
         } catch {
-            details.textContent = "Last attempt failed to load image";
+            // just skip failed attempts
         }
+
+        // tiny delay so the browser doesn't freeze
+        await new Promise(res => setTimeout(res, 10));
     }
 }
 
-findImage();
+startLoop();
 </script>
 
 </body>
