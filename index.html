@@ -6,11 +6,8 @@
 <style>
     body {
         font-family: Arial, sans-serif;
-        margin: 20px;
         text-align: center;
-    }
-    #img-container {
-        margin-top: 20px;
+        margin: 20px;
     }
     img {
         max-width: 90%;
@@ -25,48 +22,61 @@
 <h2>Tikolu Random Image Finder</h2>
 
 <div id="status">loading…</div>
+<div id="details"></div>
 <button id="showBtn" style="display:none;">show?</button>
-
 <div id="img-container"></div>
 
 <script>
 function randomCode() {
     let letters = "abcdefghijklmnopqrstuvwxyz";
     let out = "";
-    for (let i = 0; i < 5; i++) out += letters[Math.floor(Math.random() * letters.length)];
+    for (let i = 0; i < 5; i++) {
+        out += letters[Math.floor(Math.random() * letters.length)];
+    }
     return out;
 }
 
+function tryImage(url) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve("loaded");
+        img.onerror = () => reject("error");
+        img.src = url;
+    });
+}
+
 async function findImage() {
-    document.getElementById("status").textContent = "loading…";
-    document.getElementById("showBtn").style.display = "none";
+    let attempts = 0;
+
+    const status = document.getElementById("status");
+    const details = document.getElementById("details");
+    const showBtn = document.getElementById("showBtn");
+    const container = document.getElementById("img-container");
 
     while (true) {
+        attempts++;
+        status.textContent = `Searching… tried ${attempts} codes`;
+
         let code = randomCode();
         let url = "https://tikolu.net/i/" + code;
 
         try {
-            let response = await fetch(url, { method: "HEAD" });
+            await tryImage(url);
 
-            // 200 = valid image
-            if (response.ok) {
-                document.getElementById("status").textContent = 
-                    "Found: " + url;
-                
-                // prepare button
-                document.getElementById("showBtn").onclick = () => {
-                    let img = document.createElement("img");
-                    img.src = url;
-                    let container = document.getElementById("img-container");
-                    container.innerHTML = "";
-                    container.appendChild(img);
-                };
+            status.textContent = `Found after ${attempts} tries`;
+            details.textContent = url;
 
-                document.getElementById("showBtn").style.display = "inline-block";
-                break;
-            }
-        } catch (e) {
-            // network errors just retry
+            showBtn.onclick = () => {
+                container.innerHTML = "";
+                const img = document.createElement("img");
+                img.src = url;
+                container.appendChild(img);
+            };
+
+            showBtn.style.display = "inline-block";
+            break;
+        } catch {
+            details.textContent = "Last attempt failed to load image";
         }
     }
 }
