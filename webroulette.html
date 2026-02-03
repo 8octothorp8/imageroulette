@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Website Roulette</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #111;
+        color: #eee;
+        text-align: center;
+        padding-top: 60px;
+    }
+
+    h1 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+    }
+
+    button {
+        font-size: 1.2em;
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        background: #00bcd4;
+        color: black;
+    }
+
+    #status {
+        margin-top: 25px;
+        font-size: 1.1em;
+        opacity: 0.9;
+    }
+
+    #result {
+        margin-top: 30px;
+        font-size: 1.4em;
+        word-break: break-all;
+    }
+
+    iframe {
+        display: none;
+    }
+</style>
+</head>
+<body>
+
+<h1>🌐 Website Roulette</h1>
+<button onclick="startRoulette()">Spin</button>
+
+<div id="status"></div>
+<div id="result"></div>
+
+<!-- hidden tester iframe -->
+<iframe id="tester"></iframe>
+
+<script>
+const tlds = ["com", "net", "org", "io", "info"];
+const iframe = document.getElementById("tester");
+const status = document.getElementById("status");
+const result = document.getElementById("result");
+
+let spinning = false;
+
+function randomDomainName() {
+    const length = Math.floor(Math.random() * 4) + 3; // 3–6 letters
+    let name = "";
+    for (let i = 0; i < length; i++) {
+        name += String.fromCharCode(97 + Math.floor(Math.random() * 26));
+    }
+    return name;
+}
+
+function startRoulette() {
+    if (spinning) return;
+    spinning = true;
+    result.textContent = "";
+    status.textContent = "Spinning...";
+    tryNext();
+}
+
+function tryNext() {
+    const name = randomDomainName();
+    const tld = tlds[Math.floor(Math.random() * tlds.length)];
+    const url = `https://${name}.${tld}`;
+
+    status.textContent = `Trying ${url}`;
+
+    let timeout = setTimeout(() => {
+        iframe.src = "";
+        tryNext();
+    }, 2500);
+
+    iframe.onload = () => {
+        clearTimeout(timeout);
+        spinning = false;
+        status.textContent = "Found a live website!";
+        result.textContent = url;
+
+        // Redirect in the SAME TAB
+        setTimeout(() => {
+            window.location.href = url;
+        }, 1000);
+    };
+
+    iframe.onerror = () => {
+        clearTimeout(timeout);
+        tryNext();
+    };
+
+    iframe.src = url;
+}
+</script>
+
+</body>
+</html>
